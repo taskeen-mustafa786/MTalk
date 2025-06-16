@@ -1,13 +1,11 @@
 const mongoose = require('mongoose');
 
 const ConversationSchema = new mongoose.Schema({
-conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
-  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  type: { type: String, enum: ['text', 'image', 'file', 'voice', 'location', 'reaction'], default: 'text' },
-  content: String,
-  status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
-  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  createdAt: { type: Date, default: Date.now },
+  isGroup: { type: Boolean, default: false },
+  name: String,
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  admins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
 }, { timestamps: true });
 
 module.exports = mongoose.Model('Conversation',ConversationSchema)
