@@ -8,4 +8,4 @@ const ConversationSchema = new mongoose.Schema({
   lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
 }, { timestamps: true });
 
-module.exports = mongoose.Model('Conversation',ConversationSchema)
+module.exports = mongoose.model('Conversation',ConversationSchema)

@@ -1,7 +1,7 @@
 const Message = require('../models/Message');
 const Conversation = require('../models/Conversation');
 const User = require('../models/User');
-const io = require('../sockets/socketInstance'); // import socket.io instance
+const io = require('../sockets/socketInstance'); 
 
 async function sendMessage(req, res) {
   try {

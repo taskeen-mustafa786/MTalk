@@ -10,4 +10,4 @@ conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
   createdAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
-module.exports = mongoose.Model('Message',MessageSchema)
+module.exports = mongoose.model('Message',MessageSchema)
