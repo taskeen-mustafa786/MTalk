@@ -3,6 +3,7 @@ const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const {seedDemoData} = require('./utils/seedDemoData')
 
 
 // Import routes
@@ -55,8 +56,11 @@ mongoose.connect(MONGO_URI, {
   
   // Socket.IO event handlers
   require('./sockets/socketHandlers')(io);
+
   
   console.log('Socket.IO initialized');
+
+  seedDemoData();
 })
 .catch(err => {
   console.error('MongoDB connection error:', err);
@@ -78,7 +82,8 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/users', contactRoutes);
+app.use('/api/contacts', contactRoutes); // separate base path
+
 
 // // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

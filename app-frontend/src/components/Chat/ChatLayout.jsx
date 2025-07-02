@@ -61,11 +61,11 @@ export default function ChatLayout({ user, onLogout }) {
           conversations={conversations}
           selectedConversation={selectedConversation}
           onSelect={setSelectedConversation}
-          currentUserId={user.id}
+          currentUserId={user._id}
           onNewGroupClick={() => setGroupModalOpen(true)}
         />
         {selectedConversation ? (
-          <ChatWindow conversation={selectedConversation} currentUserId={user.id} />
+          <ChatWindow conversation={selectedConversation} currentUserId={user._id} />
         ) : (
           <div className="flex items-center justify-center flex-1 text-gray-500">
             No conversation selected

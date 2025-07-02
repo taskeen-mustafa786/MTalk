@@ -11,7 +11,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreate }) {
     async function fetchContacts() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:4000/api/users/saved-contacts', {
+        const res = await fetch('http://localhost:4000/api/contacts/saved-contacts', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch saved contacts');
@@ -43,7 +43,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreate }) {
     if (!manualContact.trim()) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4000/api/users/add', {
+      const res = await fetch('http://localhost:4000/api/contacts/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreate }) {
       if (!res.ok) throw new Error('Failed to add contact');
       setManualContact('');
       // Refresh contacts
-      const contactsRes = await fetch('http://localhost:4000/api/users/saved-contacts', {
+      const contactsRes = await fetch('http://localhost:4000/api/contacts/saved-contacts', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await contactsRes.json();
