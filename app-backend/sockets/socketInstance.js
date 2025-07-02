@@ -1,14 +1,15 @@
-let ioInstance = null;
+   let ioInstance = null;
 
-function setSocketInstance(io) {
-  ioInstance = io;
-}
+   function setSocketInstance(io) {
+     ioInstance = io;
+   }
 
-function getSocketInstance() {
-  return ioInstance;
-}
+   function getSocketInstance() {
+     return ioInstance;
+   }
 
-module.exports = {
-  setSocketInstance,
-  getSocketInstance,
-};
+   module.exports = {
+     setSocketInstance,
+     getSocketInstance,
+   };
+   

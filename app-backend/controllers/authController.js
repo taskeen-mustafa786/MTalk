@@ -24,7 +24,7 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ message: 'Username and password are required' });
+    if (!username || !password) return res.status(400).json({ message: 'Username and password required' });
 
     const user = await User.findOne({ username });
     if (!user) return res.status(400).json({ message: 'Invalid username or password' });
@@ -32,10 +32,14 @@ async function login(req, res) {
     const valid = await comparePassword(password, user.passwordHash);
     if (!valid) return res.status(400).json({ message: 'Invalid username or password' });
 
-    return res.json({ token: generateJWT(user), user: { id: user._id, username, displayName: user.displayName, avatarUrl: user.avatarUrl } });
+    const token = generateJWT(user);
+    res.json({
+      token,
+      user: { id: user._id, username: user.username, displayName: user.displayName, avatarUrl: user.avatarUrl },
+    });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 }
 

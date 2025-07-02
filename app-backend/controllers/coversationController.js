@@ -1,4 +1,4 @@
-const Conversation = require('../models/Conversation')
+const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const User = require('../models/User');
 
@@ -58,7 +58,7 @@ async function createConversation(req, res) {
     const conversation = new Conversation({ members, name, isGroup: !!isGroup, admins: [req.user.id] });
     await conversation.save();
 
-    res.json(conversation);
+    res.status(201).json(conversation); // Return 201 for created resource
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

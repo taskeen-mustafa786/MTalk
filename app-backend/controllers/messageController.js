@@ -1,35 +1,49 @@
 const Message = require('../models/Message');
 const Conversation = require('../models/Conversation');
-const User = require('../models/User');
-const io = require('../sockets/socketInstance'); 
 
 async function sendMessage(req, res) {
   try {
     const { conversationId, type, content } = req.body;
-    if (!conversationId || !type || !content) return res.status(400).json({ message: 'Missing fields' });
+    
+    // Validation
+    if (!conversationId || !type || !content) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
 
+    // Create and save message
     const message = new Message({
       conversation: conversationId,
       sender: req.user.id,
       type,
       content,
-      status: 'sent',
+      status: 'sent'
     });
+
     await message.save();
 
-    await Conversation.findByIdAndUpdate(conversationId, { lastMessage: message._id, updatedAt: new Date() });
+    // Update conversation last message
+    await Conversation.findByIdAndUpdate(
+      conversationId,
+      { 
+        lastMessage: message._id,
+        updatedAt: new Date() 
+      }
+    );
 
-    // Emit via Socket.io
-    const populatedMessage = await message.populate('sender', 'displayName avatarUrl username').execPopulate();
-    io.to(conversationId).emit('newMessage', populatedMessage);
+    // Populate sender details
+    const populatedMessage = await Message.findById(message._id)
+      .populate('sender', 'displayName avatarUrl username');
 
-    res.json(message);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    // Emit to conversation room
+    req.io.to(conversationId).emit('newMessage', populatedMessage);
+
+    return res.status(201).json(populatedMessage);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 }
 
 module.exports = {
-  sendMessage,
+  sendMessage
 };
