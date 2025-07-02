@@ -30,9 +30,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// // Preflight options handler
-app.options('*', cors());
-
 // // Initialize Socket.IO with proper CORS settings
 const io = require('socket.io')(server, {
   cors: {
@@ -47,8 +44,6 @@ const io = require('socket.io')(server, {
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://taskeen-mustafa786:TM786@taskeen.17hikpk.mongodb.net/?retryWrites=true&w=majority&appName=Taskeen';
 
 mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000
 })
