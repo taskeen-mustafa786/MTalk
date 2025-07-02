@@ -11,6 +11,9 @@ const conversationRoutes = require('./routes/conversationRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const userRoutes = require('./routes/userRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+
+
 
 const app = express();
 const server = http.createServer(app);
@@ -75,6 +78,7 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/users', contactRoutes);
 
 // // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

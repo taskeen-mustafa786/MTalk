@@ -6,9 +6,10 @@ export default function ChatWindow({ conversation, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [socket, setSocket] = useState(null);
+  const [media, setMedia] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Socket connection
+  // Initialize socket connection
   useEffect(() => {
     const newSocket = io('http://localhost:4000', {
       withCredentials: true,
@@ -18,10 +19,7 @@ export default function ChatWindow({ conversation, currentUserId }) {
     });
 
     setSocket(newSocket);
-
-    if (conversation?._id) {
-      newSocket.emit('joinConversation', conversation._id);
-    }
+    if (conversation?._id) newSocket.emit('joinConversation', conversation._id);
 
     const handleNewMessage = (message) => {
       setMessages(prev => [...prev, message]);
@@ -34,62 +32,68 @@ export default function ChatWindow({ conversation, currentUserId }) {
     };
   }, [conversation?._id]);
 
-  // Initial messages
+  // Fetch initial messages
   useEffect(() => {
     async function fetchMessages() {
       try {
-        const res = await fetch(
-          `http://localhost:4000/api/conversations/${conversation._id}/messages`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-          }
-        );
-
-        if (!res.ok) throw new Error('Failed to fetch messages');
-
+        const res = await fetch(`http://localhost:4000/api/conversations/${conversation._id}/messages`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+          credentials: 'include'
+        });
         const data = await res.json();
         setMessages(data);
       } catch (err) {
         console.error('Error fetching messages:', err);
       }
     }
-
-    if (conversation?._id) {
-      fetchMessages();
-    }
+    if (conversation?._id) fetchMessages();
   }, [conversation?._id]);
 
-  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Send message
   async function sendMessage() {
     try {
-      if (!input.trim()) return;
+      if (!input.trim() && !media) return;
 
-      const res = await fetch('http://localhost:4000/api/messages', {
+      let messagePayload = {
+        conversationId: conversation._id,
+        type: media ? 'image' : 'text',
+        content: input.trim()
+      };
+
+      if (media) {
+        const formData = new FormData();
+        formData.append('file', media);
+
+       const uploadRes = await fetch('http://localhost:4000/api/media/upload', {
+  method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+          credentials: 'include',
+          body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        messagePayload.content = uploadData.url;
+      }
+
+      await fetch('http://localhost:4000/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
         },
         credentials: 'include',
-        body: JSON.stringify({
-          conversationId: conversation._id,
-          type: 'text',
-          content: input.trim()
-        })
+        body: JSON.stringify(messagePayload)
       });
 
-      if (!res.ok) throw new Error(await res.text());
-
       setInput('');
+      setMedia(null);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -102,49 +106,60 @@ export default function ChatWindow({ conversation, currentUserId }) {
     }
   };
 
-  return (
-    <div className="flex flex-col h-full bg-[#f0f0f0] relative">
-      {/* Chat Header */}
-      <div className="flex items-center px-4 py-3 bg-white shadow-md sticky top-0 z-10">
-        <div className="flex flex-col">
-          <span className="font-semibold text-gray-800">
-            {conversation?.title || 'Chat'}
-          </span>
-          <span className="text-xs text-gray-500">Online</span>
-        </div>
-      </div>
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setMedia(file);
+  };
 
-      {/* Message Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
-        {messages.map((msg) => (
-          <MessageBubble
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.map(msg => (
+          <MessageBubble 
             key={msg._id}
             message={msg}
-            isOwn={msg.sender === currentUserId || msg.sender?._id === currentUserId}
+            isOwn={msg.sender === currentUserId || msg.sender?._id === currentUserId} 
           />
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0 z-10">
+      <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-2">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            id="file-upload"
+          />
+          <label htmlFor="file-upload" className="cursor-pointer bg-gray-200 p-2 rounded hover:bg-gray-300">
+            📎
+          </label>
+
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message"
-            className="flex-1 p-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Type a message..."
+            className="flex-1 p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+
           <button
             onClick={sendMessage}
-            disabled={!input.trim()}
-            className="bg-blue-500 text-white px-4 py-2 rounded-full disabled:opacity-50 hover:bg-blue-600 transition"
+            disabled={!input.trim() && !media}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50 hover:bg-blue-600 transition-colors"
           >
             Send
           </button>
         </div>
+
+        {media && (
+          <div className="mt-2 text-sm text-gray-600">
+            Attached: {media.name}
+          </div>
+        )}
       </div>
     </div>
   );

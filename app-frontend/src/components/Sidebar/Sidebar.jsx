@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import ConversationListItem from '../Conversations/ConversationListItem';
 
-export default function Sidebar({
-  conversations,
-  selectedConversation,
-  onSelect,
-  currentUserId
-}) {
+export default function Sidebar({ conversations, selectedConversation, onSelect, currentUserId, onNewGroupClick }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter conversations based on display name
@@ -23,8 +18,14 @@ export default function Sidebar({
   return (
     <aside className="w-full max-w-sm min-w-[300px] bg-[#f0f2f5] border-r border-gray-300 flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-300 text-lg font-semibold text-gray-800">
-        Chats
+      <div className="p-4 border-b border-gray-300 text-lg font-semibold text-gray-800 flex justify-between items-center">
+        <span>Chats</span>
+        <button
+          className="text-sm px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={onNewGroupClick}
+        >
+          + Group
+        </button>
       </div>
 
       {/* Search bar */}

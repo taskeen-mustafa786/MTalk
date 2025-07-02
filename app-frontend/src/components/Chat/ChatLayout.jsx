@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../Header/Header';
 import Sidebar from '../Sidebar/Sidebar';
 import ChatWindow from './ChatWindow';
+import CreateGroupModal from '../Models/CreateGroupModel'
 
 export default function ChatLayout({ user, onLogout }) {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [isGroupModalOpen, setGroupModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchConversations() {
@@ -25,36 +28,54 @@ export default function ChatLayout({ user, onLogout }) {
     fetchConversations();
   }, []);
 
+  const handleGroupCreate = async (groupData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:4000/api/conversations/group', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(groupData),
+      });
+
+      if (res.ok) {
+        const newGroup = await res.json();
+        setConversations((prev) => [newGroup, ...prev]);
+        setSelectedConversation(newGroup);
+        setGroupModalOpen(false);
+      } else {
+        console.error('Group creation failed');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-[#f0f2f5]">
-      {/* Top Header */}
+    <div className="flex flex-col min-h-screen">
       <Header user={user} onLogout={onLogout} />
-
-      {/* Main Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-full max-w-sm min-w-[300px] border-r border-gray-300 bg-white">
-          <Sidebar
-            conversations={conversations}
-            selectedConversation={selectedConversation}
-            onSelect={setSelectedConversation}
-            currentUserId={user.id}
-          />
-        </div>
-
-        {/* Chat Window */}
-        <div className="flex-1 bg-[#efeae2]">
-          {selectedConversation ? (
-            <ChatWindow
-              conversation={selectedConversation}
-              currentUserId={user.id}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              No conversation selected
-            </div>
-          )}
-        </div>
+        <Sidebar
+          conversations={conversations}
+          selectedConversation={selectedConversation}
+          onSelect={setSelectedConversation}
+          currentUserId={user.id}
+          onNewGroupClick={() => setGroupModalOpen(true)}
+        />
+        {selectedConversation ? (
+          <ChatWindow conversation={selectedConversation} currentUserId={user.id} />
+        ) : (
+          <div className="flex items-center justify-center flex-1 text-gray-500">
+            No conversation selected
+          </div>
+        )}
+        <CreateGroupModal
+          isOpen={isGroupModalOpen}
+          onClose={() => setGroupModalOpen(false)}
+          onCreate={handleGroupCreate}
+        />
       </div>
     </div>
   );

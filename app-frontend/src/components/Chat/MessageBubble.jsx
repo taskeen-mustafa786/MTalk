@@ -16,7 +16,17 @@ export default function MessageBubble({ message, isOwn }) {
         }`}
       >
         {/* Bubble content */}
-        <div>{message.content}</div>
+        <div>
+          {message.type === 'image' ? (
+            <img
+              src={message.content}
+              alt="sent media"
+              className="rounded max-w-full h-auto"
+            />
+          ) : (
+            message.content
+          )}
+        </div>
 
         {/* Timestamp */}
         <div className="text-[10px] text-gray-600 mt-1 text-right">{time}</div>
