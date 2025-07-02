@@ -34,16 +34,29 @@
 
 ## 🛠️ Tech Stack
 
-| Layer         | Technology                          |
-|---------------|--------------------------------------|
-| **Frontend**  | React.js, TailwindCSS                |
-| **Backend**   | Node.js, Express.js                  |
-| **Database**  | MongoDB (via Mongoose ODM)           |
-| **Real-Time** | Socket.IO                            |
-| **Auth**      | JSON Web Tokens (JWT), Bcrypt        |
-| **Email**     | Nodemailer (Gmail SMTP Integration)  |
+-  | Layer         | Technology                          |
+-  |---------------|--------------------------------------|
+  -  | **Frontend**  | React.js, TailwindCSS                |
+-  | **Backend**   | Node.js, Express.js                  |
+-  | **Database**  | MongoDB (via Mongoose ODM)           |
+-  | **Real-Time** | Socket.IO                            |
+-  | **Auth**      | JSON Web Tokens (JWT), Bcrypt        |
+-  | **Email**     | Nodemailer (Gmail SMTP Integration)  |
 
 ---
 
 ## 📂 Project Structure
+
+mtalk/
+├── client/ # React frontend
+├── server/ # Node.js backend
+│ ├── controllers/
+│ ├── models/
+│ ├── routes/
+│ └── utils/
+├── socket/ # Socket.IO events
+├── config/ # Environment & DB config
+└── README.md # Project documentation
+
+
 
