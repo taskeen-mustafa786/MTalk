@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import ConversationListItem from '../Conversations/ConversationListItem';
 
-export default function Sidebar({ conversations, selectedConversation, onSelect, currentUserId, onNewGroupClick }) {
+export default function Sidebar({
+  conversations = [], // ✅ Default to empty array
+  selectedConversation,
+  onSelect,
+  currentUserId,
+  onNewGroupClick,
+}) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter conversations based on display name
   const filteredConversations = conversations.filter((conv) => {
     const contact = conv.isGroup
       ? { displayName: conv.name }
