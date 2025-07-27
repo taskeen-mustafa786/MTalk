@@ -13,6 +13,10 @@ const contactSchema = new Schema(
       ref: 'User',
       required: true,
     },
+    displayName: {
+      type: String, // 👈 Display name given by the owner
+      required: true,
+    },
     status: {
       type: String,
       enum: ['active', 'pending', 'blocked'],
@@ -27,7 +31,7 @@ const contactSchema = new Schema(
 // Prevent duplicate contacts for the same owner
 contactSchema.index({ owner: 1, contact: 1 }, { unique: true });
 
-// Return cleaner JSON (remove _id and __v)
+// Clean up JSON
 contactSchema.set('toJSON', {
   transform: function (doc, ret) {
     ret.id = ret._id;

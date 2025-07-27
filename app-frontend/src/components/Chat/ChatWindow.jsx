@@ -9,21 +9,29 @@ export default function ChatWindow({ conversation, currentUserId }) {
   const [media, setMedia] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Initialize socket connection
+  // Ensure we reset messages when conversation changes
   useEffect(() => {
+    setMessages([]);
+  }, [conversation?._id]);
+
+  // Initialize socket
+  useEffect(() => {
+    if (!conversation?._id) return;
+
     const newSocket = io('http://localhost:4000', {
       withCredentials: true,
       extraHeaders: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
 
     setSocket(newSocket);
-    if (conversation?._id) newSocket.emit('joinConversation', conversation._id);
+    newSocket.emit('joinConversation', conversation._id);
 
     const handleNewMessage = (message) => {
-      setMessages(prev => [...prev, message]);
+      setMessages((prev) => [...prev, message]);
     };
+
     newSocket.on('newMessage', handleNewMessage);
 
     return () => {
@@ -34,22 +42,27 @@ export default function ChatWindow({ conversation, currentUserId }) {
 
   // Fetch initial messages
   useEffect(() => {
-    async function fetchMessages() {
-      try {
-        const res = await fetch(`http://localhost:4000/api/conversations/${conversation._id}/messages`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          },
-          credentials: 'include'
-        });
-        const data = await res.json();
-        setMessages(data);
-      } catch (err) {
-        console.error('Error fetching messages:', err);
-      }
+  async function fetchMessages() {
+    try {
+      const res = await fetch(`http://localhost:4000/api/conversations/${conversation._id}/messages`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      setMessages(data);
+    } catch (err) {
+      console.error('Error fetching messages:', err);
     }
-    if (conversation?._id) fetchMessages();
-  }, [conversation?._id]);
+  }
+ if (conversation?._id) {
+  setMessages([]); // Clear previous
+  fetchMessages();
+}
+
+}, [conversation?._id]);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -59,23 +72,24 @@ export default function ChatWindow({ conversation, currentUserId }) {
     try {
       if (!input.trim() && !media) return;
 
-      let messagePayload = {
+      const messagePayload = {
         conversationId: conversation._id,
         type: media ? 'image' : 'text',
-        content: input.trim()
+        content: input.trim(),
       };
 
+      // Handle media upload
       if (media) {
         const formData = new FormData();
         formData.append('file', media);
 
-       const uploadRes = await fetch('http://localhost:4000/api/media/upload', {
-  method: 'POST',
+        const uploadRes = await fetch('http://localhost:4000/api/media/upload', {
+          method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
           credentials: 'include',
-          body: formData
+          body: formData,
         });
 
         const uploadData = await uploadRes.json();
@@ -86,10 +100,10 @@ export default function ChatWindow({ conversation, currentUserId }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         credentials: 'include',
-        body: JSON.stringify(messagePayload)
+        body: JSON.stringify(messagePayload),
       });
 
       setInput('');
@@ -111,19 +125,37 @@ export default function ChatWindow({ conversation, currentUserId }) {
     if (file) setMedia(file);
   };
 
+  // ✅ Early return to prevent crashing before a valid conversation is set
+  if (!conversation || !conversation._id) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
+        No conversation selected
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
+      {/* Messages list */}
       <div className="flex-1 overflow-y-auto p-4">
-        {messages.map(msg => (
-          <MessageBubble 
-            key={msg._id}
-            message={msg}
-            isOwn={msg.sender === currentUserId || msg.sender?._id === currentUserId} 
-          />
-        ))}
+       {messages.length > 0 ? (
+  messages.map(msg => (
+    <MessageBubble 
+      key={msg._id}
+      message={msg}
+      isOwn={msg.sender === currentUserId || msg.sender?._id === currentUserId} 
+    />
+  ))
+) : (
+  <div className="text-gray-500 text-sm text-center mt-10">
+    No messages yet. Start the conversation!
+  </div>
+)}
+
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Message input */}
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-2">
           <input

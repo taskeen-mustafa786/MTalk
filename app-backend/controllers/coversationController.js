@@ -8,7 +8,7 @@ async function getConversations(req, res) {
     const conversations = await Conversation.find({ members: req.user.id })
       .sort({ updatedAt: -1 })
       .populate('lastMessage')
-      .populate('members', 'displayName avatarUrl username online')
+      .populate('members', 'displayName avatarUrl username email online')
       .lean();
 
     const results = await Promise.all(
@@ -16,7 +16,7 @@ async function getConversations(req, res) {
         const lastMessage = conv.lastMessage;
         if (lastMessage) {
           const sender = await User.findById(lastMessage.sender)
-            .select('displayName avatarUrl username')
+            .select('displayName avatarUrl username email')
             .lean();
           lastMessage.sender = sender;
         }
@@ -44,7 +44,7 @@ async function getMessages(req, res) {
     })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate('sender', 'displayName avatarUrl')
+      .populate('sender', 'displayName avatarUrl email')
       .lean();
 
     res.json(messages.reverse());
@@ -62,7 +62,9 @@ async function createConversation(req, res) {
       return res.status(400).json({ message: 'Members required' });
     }
 
-    if (!members.includes(req.user.id)) members.push(req.user.id);
+    if (!members.includes(req.user.id)) {
+      members.push(req.user.id);
+    }
 
     const conversation = new Conversation({
       members,
@@ -72,6 +74,8 @@ async function createConversation(req, res) {
     });
 
     await conversation.save();
+    await conversation.populate('members', 'displayName avatarUrl email');
+
     res.status(201).json(conversation);
   } catch (err) {
     console.error(err);
@@ -79,6 +83,7 @@ async function createConversation(req, res) {
   }
 }
 
+// POST /api/conversations/start
 // POST /api/conversations/start
 async function startConversation(req, res) {
   const { contactId } = req.body;
@@ -92,7 +97,9 @@ async function startConversation(req, res) {
     let conversation = await Conversation.findOne({
       isGroup: false,
       members: { $all: [userId, contactId], $size: 2 },
-    }).populate('members', 'displayName email');
+    })
+      .populate('members', 'displayName email avatarUrl')
+      .populate('lastMessage');
 
     if (!conversation) {
       conversation = new Conversation({
@@ -100,7 +107,9 @@ async function startConversation(req, res) {
         isGroup: false,
       });
       await conversation.save();
-      await conversation.populate('members', 'displayName email');
+      conversation = await Conversation.findById(conversation._id)
+        .populate('members', 'displayName email avatarUrl')
+        .populate('lastMessage');
     }
 
     res.status(200).json(conversation);
